@@ -197,15 +197,13 @@ class PAWS:
 
         for attempt in range(retries):
             try:
-                response = self.session.post(url, headers=self.headers, data=data)
-                response.raise_for_status()
-                result = response.json()
-                if result['success']:
-                    token = result['data'][0] if isinstance(result['data'][0], str) else None
-                    return token
-                else:
+                response = self.session.post(url, headers=self.headers, data=data, timeout=10)
+                if response.status_code == 500:
                     return None
-            except (requests.RequestException, ValueError) as e:
+                
+                response.raise_for_status()
+                return response.json()['data'][0]
+            except (requests.RequestException, requests.Timeout, ValueError) as e:
                 if attempt < retries - 1:
                     print(
                         f"{Fore.RED+Style.BRIGHT}HTTP ERROR{Style.RESET_ALL}"
@@ -227,14 +225,13 @@ class PAWS:
 
         for attempt in range(retries):
             try:
-                response = self.session.get(url, headers=self.headers)
-                response.raise_for_status()
-                result = response.json()
-                if result['success']:
-                    return result['data']
-                else:
+                response = self.session.get(url, headers=self.headers, timeout=10)
+                if response.status_code == 401:
                     return None
-            except (requests.RequestException, ValueError) as e:
+                
+                response.raise_for_status()
+                return response.json()['data']
+            except (requests.RequestException, requests.Timeout, ValueError) as e:
                 if attempt < retries - 1:
                     print(
                         f"{Fore.RED+Style.BRIGHT}HTTP ERROR{Style.RESET_ALL}"
@@ -256,14 +253,10 @@ class PAWS:
 
         for attempt in range(retries):
             try:
-                response = self.session.get(url, headers=self.headers)
+                response = self.session.get(url, headers=self.headers, timeout=10)
                 response.raise_for_status()
-                result = response.json()
-                if result['success']:
-                    return result['data']
-                else:
-                    return None
-            except (requests.RequestException, ValueError) as e:
+                return response.json()['data']
+            except (requests.RequestException, requests.Timeout, ValueError) as e:
                 if attempt < retries - 1:
                     print(
                         f"{Fore.RED+Style.BRIGHT}HTTP ERROR{Style.RESET_ALL}"
@@ -286,14 +279,10 @@ class PAWS:
 
         for attempt in range(retries):
             try:
-                response = self.session.post(url, headers=self.headers, data=data)
+                response = self.session.post(url, headers=self.headers, data=data, timeout=10)
                 response.raise_for_status()
-                result = response.json()
-                if result['success']:
-                    return result['data']
-                else:
-                    return None
-            except (requests.RequestException, ValueError) as e:
+                return response.json().get('data', None)
+            except (requests.RequestException, requests.Timeout, ValueError) as e:
                 if attempt < retries - 1:
                     print(
                         f"{Fore.RED+Style.BRIGHT}HTTP ERROR{Style.RESET_ALL}"
@@ -316,14 +305,10 @@ class PAWS:
 
         for attempt in range(retries):
             try:
-                response = self.session.post(url, headers=self.headers, data=data)
+                response = self.session.post(url, headers=self.headers, data=data, timeout=10)
                 response.raise_for_status()
-                result = response.json()
-                if result['success']:
-                    return result['data']
-                else:
-                    return None
-            except (requests.RequestException, ValueError) as e:
+                return response.json().get('data', None)
+            except (requests.RequestException, requests.Timeout, ValueError) as e:
                 if attempt < retries - 1:
                     print(
                         f"{Fore.RED+Style.BRIGHT}HTTP ERROR{Style.RESET_ALL}"
@@ -377,10 +362,9 @@ class PAWS:
 
                 quests = self.quest_lists(new_token if 'new_token' in locals() else token)
                 if quests:
+                    completed = False
                     for quest in quests:
                         quest_id = quest['_id']
-                        rewards = quest.get('rewards', [])
-                        amount = rewards[0]['amount'] if rewards and 'amount' in rewards[0] else None
 
                         current_progress = quest['progress']['current']
                         total_progress = quest['progress']['total']
@@ -397,16 +381,16 @@ class PAWS:
                                         f"{Fore.GREEN+Style.BRIGHT}Is Started{Style.RESET_ALL}"
                                         f"{Fore.MAGENTA+Style.BRIGHT} ]{Style.RESET_ALL}"
                                     )
-                                    time.sleep(3)
+                                    time.sleep(1)
 
                                     claim = self.claim_quests(new_token if 'new_token' in locals() else token, quest_id)
-                                    if claim:
+                                    if claim and claim['status']:
                                         self.log(
                                             f"{Fore.MAGENTA+Style.BRIGHT}[ Quest{Style.RESET_ALL}"
                                             f"{Fore.WHITE+Style.BRIGHT} {quest['title']} {Style.RESET_ALL}"
                                             f"{Fore.GREEN+Style.BRIGHT}Is Claimed{Style.RESET_ALL}"
                                             f"{Fore.MAGENTA+Style.BRIGHT} ] [ Reward{Style.RESET_ALL}"
-                                            f"{Fore.WHITE+Style.BRIGHT} {amount} $PAWS {Style.RESET_ALL}"
+                                            f"{Fore.WHITE+Style.BRIGHT} {claim['amount']} $PAWS {Style.RESET_ALL}"
                                             f"{Fore.MAGENTA+Style.BRIGHT}]{Style.RESET_ALL}"
                                         )
                                     else:
@@ -416,6 +400,7 @@ class PAWS:
                                             f"{Fore.RED+Style.BRIGHT}Isn't Claimed{Style.RESET_ALL}"
                                             f"{Fore.MAGENTA+Style.BRIGHT} ]{Style.RESET_ALL}"
                                         )
+
                                 else:
                                     self.log(
                                         f"{Fore.MAGENTA+Style.BRIGHT}[ Quest{Style.RESET_ALL}"
@@ -423,16 +408,17 @@ class PAWS:
                                         f"{Fore.RED+Style.BRIGHT}Isn't Started{Style.RESET_ALL}"
                                         f"{Fore.MAGENTA+Style.BRIGHT} ]{Style.RESET_ALL}"
                                     )
+                                time.sleep(1)
 
                             else:
                                 claim = self.claim_quests(new_token if 'new_token' in locals() else token, quest_id)
-                                if claim:
+                                if claim and claim['status']:
                                     self.log(
                                         f"{Fore.MAGENTA+Style.BRIGHT}[ Quest{Style.RESET_ALL}"
                                         f"{Fore.WHITE+Style.BRIGHT} {quest['title']} {Style.RESET_ALL}"
                                         f"{Fore.GREEN+Style.BRIGHT}Is Claimed{Style.RESET_ALL}"
                                         f"{Fore.MAGENTA+Style.BRIGHT} ] [ Reward{Style.RESET_ALL}"
-                                        f"{Fore.WHITE+Style.BRIGHT} {amount} $PAWS {Style.RESET_ALL}"
+                                        f"{Fore.WHITE+Style.BRIGHT} {claim['amount']} $PAWS {Style.RESET_ALL}"
                                         f"{Fore.MAGENTA+Style.BRIGHT}]{Style.RESET_ALL}"
                                     )
                                 else:
@@ -442,10 +428,21 @@ class PAWS:
                                         f"{Fore.RED+Style.BRIGHT}Isn't Claimed{Style.RESET_ALL}"
                                         f"{Fore.MAGENTA+Style.BRIGHT} ]{Style.RESET_ALL}"
                                     )
+                                time.sleep(1)
+                        else:
+                            completed = True
+
+                    if completed:
+                        self.log(
+                            f"{Fore.MAGENTA+Style.BRIGHT}[ Quest{Style.RESET_ALL}"
+                            f"{Fore.GREEN+Style.BRIGHT} Is Completed {Style.RESET_ALL}"
+                            f"{Fore.MAGENTA+Style.BRIGHT}]{Style.RESET_ALL}"
+                        )
+
                 else:
                     self.log(
                         f"{Fore.MAGENTA+Style.BRIGHT}[ Quest{Style.RESET_ALL}"
-                        f"{Fore.RED+Style.BRIGHT} Is None {Style.RESET_ALL}"
+                        f"{Fore.RED+Style.BRIGHT} Data Is None {Style.RESET_ALL}"
                         f"{Fore.MAGENTA+Style.BRIGHT}]{Style.RESET_ALL}"
                     )
                 

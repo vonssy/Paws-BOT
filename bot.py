@@ -467,7 +467,7 @@ class PAWS:
                         self.log(f"{Fore.CYAN + Style.BRIGHT}-{Style.RESET_ALL}"*75)
                         time.sleep(3)
 
-                seconds = 60
+                seconds = 1800
                 while seconds > 0:
                     formatted_time = self.format_seconds(seconds)
                     print(

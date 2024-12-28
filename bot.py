@@ -25,6 +25,7 @@ class PAWS:
             'Sec-Fetch-Site': 'same-site',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0'
         }
+        self.code = 'oXCjKki2'
 
     def clear_terminal(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -190,7 +191,7 @@ class PAWS:
 
     def user_auth(self, query: str, retries=5):
         url = 'https://api.paws.community/v1/user/auth'
-        data = json.dumps({'data':query, 'referralCode':'qEKFjt3Y'})
+        data = json.dumps({'data':query, 'referralCode':self.code})
         self.headers.update({
             'Content-Type': 'application/json'
         })

@@ -1,7 +1,7 @@
 # PAWS BOT
 PAWS BOT
 
-Register Here : [PAWS](https://t.me/PAWSOG_bot/PAWS?startapp=qEKFjt3Y)
+Register Here : [PAWS](https://t.me/PAWSOG_bot/PAWS?startapp=oXCjKki2)
 
 ## Fitur
 
